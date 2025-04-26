@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        div[data-modal-state="false"] {
+            display: none !important;
+            visibility: hidden;
+        }
+
+        div[data-modal-state="true"] {
+            display: flex !important;
+            visibility: visible;
+        }
+
+        .category-line::after {
+            content: "";
+            display: flex;
+            width: 20px;
+            height: 0;
+            border-top: 2px solid #0E663C;
+            margin-left: 10px;
+        }
+
+        @media((min-width: 768px)) {
+            div#gallary-items {
+                grid-template-columns: repeat(2, 280px) !important;
+            }
+        }
+    </style>
+    <title>Gerenciador de Produtos</title>
+</head>
+
+<body>
+    <main class="w-screen h-screen relative">
+        <div class="container mx-auto flex flex-col items-center p-3 gap-3">
+            <h1 class="font-bold text-[25px] leading-[100%] text-center tracking-[-0.02em] text-black font-inter">
+                Gerenciador de Produtos
+            </h1>
+            <div id="gallary-items" class="h-full w-full max-w-max grid grid-cols-1 justify-center gap-4 h-[calc(100vh-8rem)] mx-auto">
+
+            </div>
+        </div>
+        <button id="add-product" class="fixed right-4 z-20 bottom-4 bg-[#0E663C] rounded-full outline-none border-none">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <mask id="mask0_2_1852" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="24"
+                    height="24">
+                    <rect width="24" height="24" fill="#FFF" />
+                </mask>
+                <g mask="url(#mask0_2_1852)">
+                    <path d="M11.4444 17V12.5556H7V11.4444H11.4444V7H12.5556V11.4444H17V12.5556H12.5556V17H11.4444Z"
+                        fill="#FFF" />
+                </g>
+            </svg>
+        </button>
+    </main>
+    <div data-modal-state="false" id="overlay-modal" class="w-screen h-screen bg-black/75 flex items-center justify-center fixed top-0 left-0 z-[150]">
+        <div id="modal" class="flex flex-col items-center justify-center bg-white rounded-lg w-[280px] h-auto">
+
+        </div>
+    </div>
+</body>
+<script src="./scripts.js"></script>
+
+</html>

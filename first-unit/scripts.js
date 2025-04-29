@@ -36,7 +36,7 @@ function btnAdd(callbackSendForm) {
     const btn = document.querySelector("#add-product");
 
     function formAddProduct() {
-        const form = document.createElement('form');
+        const form = document.createElement("form");
 
         form.classList = "add-product-form w-full p-2";
         form.addEventListener("submit", function(event) {
@@ -223,9 +223,7 @@ function crudProduct() {
             });
         },
 
-        add: function (data) { 
-            console.log(data)
-
+        add: function (data) {
             return fetch(`${PATH}`, { 
                 method: "POST",
                 headers: {
@@ -241,7 +239,15 @@ function crudProduct() {
             });
         },
 
-        update: function (index, data) { },
+        update: function (index, data) { 
+            return fetch(`${PATH}${index}`, { 
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+        },
 
         get: function (index) {
             return fetch(`${PATH}${index}`, { 
@@ -258,7 +264,122 @@ function productEvents({
     callbackOpenModal,
     callbackAddElement
 }) {
-    const products = document.querySelectorAll("#gallary-items .product-element")
+    const products = document.querySelectorAll("#gallary-items .product-element");
+
+    function formAddProduct({ id, nameInitData, categoryInitData, listPriceInitData, bestPriceInitData, urlInitData, descriptionInitData, skuId }) {
+        const form = document.createElement("form");
+
+        form.classList = "add-product-form w-full p-2";
+        form.addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+            const name = formData.get("name");
+            const category = formData.get("category");
+            const listPrice = parseFloat(formData.get("listPrice"));
+            const bestPrice = parseFloat(formData.get("bestPrice"));
+            const url = formData.get("url");
+            const description = formData.get("description");
+
+
+            callbackUpdate(id, { name, category, listPrice, bestPrice, url, description, skuId })
+                .then(()=>{
+                    alert("Produto atualizado!");
+                });
+        });
+        form.innerHTML = `
+        <div class="flex flex-col space-y-2 mt-4">
+            <label for="name" class="text-sm font-medium text-gray-700">Nome do Produto</label>
+            <input
+                type="text"
+                id="name"
+                name="name"
+                value="${nameInitData}"
+                placeholder="Digite o nome do produto"
+                class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+            />
+        </div>
+
+        <div class="flex flex-col space-y-2 mt-4">
+            <label for="category" class="text-sm font-medium text-gray-700">Categoria</label>
+            <input
+                type="text"
+                id="category"
+                name="category"
+                value="${categoryInitData}"
+                placeholder="Ex: móveis, cama, mesa..."
+                class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+            />
+        </div>
+
+        <div class="flex flex-col space-y-2 mt-4">
+            <label for="listPrice" class="text-sm font-medium text-gray-700">Preço de Lista (R$)</label>
+            <input
+                type="number"
+                step="0.01"
+                id="listPrice"
+                value="${listPriceInitData}"
+                name="listPrice"
+                placeholder="Ex: 999.00"
+                class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+            />
+        </div>
+
+        <div class="flex flex-col space-y-2 mt-4">
+            <label for="bestPrice" class="text-sm font-medium text-gray-700">Melhor Preço (R$)</label>
+            <input
+                type="number"
+                step="0.01"
+                id="bestPrice"
+                name="bestPrice"
+                value="${bestPriceInitData}"
+                placeholder="Ex: 549.00"
+                class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+            />
+        </div>
+
+        <div class="flex flex-col space-y-2 mt-4">
+            <label for="url" class="text-sm font-medium text-gray-700">URL da Imagem</label>
+            <input
+                type="text"
+                id="url"
+                name="url"
+                value="${urlInitData}"
+                placeholder="Ex: /images/p-1.webp"
+                class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+            />
+        </div>
+
+        <div class="flex flex-col space-y-2 mt-4">
+            <label for="description" class="text-sm font-medium text-gray-700">Descrição</label>
+            <textarea
+                id="description"
+                name="description"
+                rows="5"
+                placeholder="Digite a descrição do produto"
+                class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+            >
+            ${descriptionInitData}
+            </textarea>
+        </div>
+
+        <div class="flex justify-end">
+            <button
+                type="submit"
+                class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition"
+            >
+                Salvar Atualização
+            </button>
+        </div>
+        `;
+        return form;
+    }
 
     return {
         init: function() {
@@ -293,6 +414,7 @@ function productEvents({
                             } = data;
                             const content = document.createElement("div");
 
+                            content.classList = "p-3";
                             content.innerHTML = `
                                 <div class="w-full flex flex-col gap-2 relative">
                                     <img src="${url}" alt="${name}" />
@@ -304,13 +426,35 @@ function productEvents({
                                     <span class="font-inter text-black font-normal font-medium text-xl leading-[23px] pl-0">${bestPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                                 </div>
                                 <div class="w-full flex flex-col gap-1">
-                                    <span class="font-inter font-normal font-medium text-xs leading-4 text-[#828282] text-left">${id}</span>
-                                    <span class="font-inter font-normal font-medium text-xs leading-4 text-[#828282] text-left">${skuId}</span>
+                                    <strong class="font-inter font-normal font-medium text-xs leading-4 text-[#828282] text-left">ID: ${id}</strong>
+                                    <strong class="font-inter font-normal font-medium text-xs leading-4 text-[#828282] text-left">SKUID: ${skuId}</strong>
                                     <span class="font-inter font-normal font-medium text-xs leading-4 text-[#828282] text-left">${description}</span>
                                 </div>
                             `;
 
                             callbackAddElement(content);
+                            callbackOpenModal();
+                        });
+                });
+
+                editProduct.addEventListener("click", function(){
+                    callbackGet(id)
+                        .then((res) => res.json())
+                        .then((data) => {
+                            console.log(data)
+
+                            const form = formAddProduct({
+                                id,
+                                bestPriceInitData: data.bestPrice,
+                                categoryInitData: data.category,
+                                descriptionInitData: data.description,
+                                listPriceInitData: data.listPrice,
+                                nameInitData: data.name,
+                                skuId: data.skuId,
+                                urlInitData: data.url
+                            });
+
+                            callbackAddElement(form);
                             callbackOpenModal();
                         });
                 });

@@ -1,5 +1,9 @@
 const PATH = "http://localhost:3000/products/";
 
+function makeRandomNumber(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function mainModal() {
     const overlayModal = document.querySelector("#overlay-modal");
 
@@ -28,13 +32,30 @@ function mainModal() {
     }
 }
 
-function btnAdd() {
+function btnAdd(callbackSendForm) {
     const btn = document.querySelector("#add-product");
 
     function formAddProduct() {
         const form = document.createElement('form');
 
         form.classList = "add-product-form w-full p-2";
+        form.addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+            const name = formData.get("name");
+            const category = formData.get("category");
+            const listPrice = parseFloat(formData.get("listPrice"));
+            const bestPrice = parseFloat(formData.get("bestPrice"));
+            const url = formData.get("url");
+            const description = formData.get("description");
+
+
+            callbackSendForm({ name, category, listPrice, bestPrice, url, description, skuId: makeRandomNumber(0, 100) })
+                .then(()=>{
+                    alert("Produto criado!");
+                });
+        });
         form.innerHTML = `
         <div class="flex flex-col space-y-2 mt-4">
             <label for="name" class="text-sm font-medium text-gray-700">Nome do Produto</label>
@@ -112,10 +133,10 @@ function btnAdd() {
 
         <div class="flex justify-end">
             <button
-            type="submit"
-            class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition"
+                type="submit"
+                class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition"
             >
-            Salvar Produto
+                Salvar Produto
             </button>
         </div>
         `;
@@ -150,7 +171,7 @@ function crudProduct() {
         element.setAttribute("data-product-id", id);
         element.innerHTML = `
             <div class="w-full flex flex-col gap-2 relative">
-                <img src="/first-unit/${url}" alt="${name}" />
+                <img src="${url}" alt="${name}" />
                 <span class="category-line font-inter font-normal font-bold text-xs leading-[120%] flex items-center tracking-[0.25em] uppercase text-[#0E663C] text-left">${category}</span>
                 <div class="flex gap-2 justify-between absolute right-4 top-2">
                     <button id="edit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 transition-colors duration-200 flex items-center gap-2">
@@ -202,17 +223,31 @@ function crudProduct() {
             });
         },
 
-        add: function (data) { },
+        add: function (data) { 
+            console.log(data)
+
+            return fetch(`${PATH}`, { 
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+        },
 
         remove: function (index) {
             return fetch(`${PATH}${index}`, {
-                method: 'DELETE'
+                method: "DELETE"
             });
         },
 
         update: function (index, data) { },
 
-        get: function (index) { },
+        get: function (index) {
+            return fetch(`${PATH}${index}`, { 
+                method: "GET",
+            });
+        },
     }
 }
 
@@ -220,7 +255,8 @@ function productEvents({
     callbackGet,
     callbackRemove,
     callbackUpdate,
-
+    callbackOpenModal,
+    callbackAddElement
 }) {
     const products = document.querySelectorAll("#gallary-items .product-element")
 
@@ -240,6 +276,44 @@ function productEvents({
                         product.remove();
                     });
                 });
+
+                viewProduct.addEventListener("click", function(){
+                    callbackGet(id)
+                        .then((response)=> response.json())
+                        .then((data) => {
+                            const { 
+                                bestPrice,
+                                category,
+                                description,
+                                id,
+                                listPrice,
+                                name,
+                                skuId,
+                                url
+                            } = data;
+                            const content = document.createElement("div");
+
+                            content.innerHTML = `
+                                <div class="w-full flex flex-col gap-2 relative">
+                                    <img src="${url}" alt="${name}" />
+                                    <span class="category-line font-inter font-normal font-bold text-xs leading-[120%] flex items-center tracking-[0.25em] uppercase text-[#0E663C] text-left">${category}</span>
+                                </div>
+                                <div class="w-full flex flex-col gap-1">
+                                    <span class="font-inter font-normal font-medium text-xs leading-4 text-[#828282] text-left">${name}</span>
+                                    <span class="font-inter text-[#828282] font-normal font-medium text-xs leading-4 pl-0 line-through">${listPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                                    <span class="font-inter text-black font-normal font-medium text-xl leading-[23px] pl-0">${bestPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                                </div>
+                                <div class="w-full flex flex-col gap-1">
+                                    <span class="font-inter font-normal font-medium text-xs leading-4 text-[#828282] text-left">${id}</span>
+                                    <span class="font-inter font-normal font-medium text-xs leading-4 text-[#828282] text-left">${skuId}</span>
+                                    <span class="font-inter font-normal font-medium text-xs leading-4 text-[#828282] text-left">${description}</span>
+                                </div>
+                            `;
+
+                            callbackAddElement(content);
+                            callbackOpenModal();
+                        });
+                });
             });
         }
     }
@@ -247,8 +321,8 @@ function productEvents({
 
 function main() {
     const { init, openModal, addElement } = mainModal();
-    const { init: initBtn } = btnAdd();
-    const { init: initCRUDproduct, remove, update, get, reset } = crudProduct();
+    const { init: initCRUDproduct, remove, update, get, reset, add } = crudProduct();
+    const { init: initBtn } = btnAdd(add);
 
     init();
     initBtn(openModal, addElement);
@@ -261,7 +335,9 @@ function main() {
                 });
             },
             callbackUpdate: update,
-            callbackGet: get
+            callbackGet: get,
+            callbackOpenModal: openModal,
+            callbackAddElement: addElement
         });
         initProductEvents();
     });
